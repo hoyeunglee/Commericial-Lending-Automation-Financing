@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Commercial Lending Application & Risk Approval Workflow</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #155e75;
+      --primary-contrast: #ffffff;
+      --accent: #0ea5e9;
+      --border: #e5e7eb;
+      --danger: #b91c1c;
+      --warning: #ca8a04;
+      --success: #15803d;
+      --info: #0369a1;
+    }
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --panel: #0f172a;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --primary: #22d3ee;
+      --primary-contrast: #0f172a;
+      --accent: #60a5fa;
+      --border: #1f2937;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+      --info: #38bdf8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Inter, Segoe UI, system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+    }
+    header {
+      position: sticky; top: 0; z-index: 10; background: var(--panel); border-bottom: 1px solid var(--border);
+    }
+    .navbar {
+      display: flex; gap: 16px; padding: 12px 20px; align-items: center; justify-content: space-between;
+    }
+    .brand { font-weight: 700; letter-spacing: 0.2px; }
+    .role-select { display: flex; gap: 8px; align-items: center; }
+    select, input, textarea {
+      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text);
+    }
+    label { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: block; }
+    .container { max-width: 1180px; margin: 20px auto; padding: 0 16px; }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+    }
+    .card h3 { margin: 0 0 8px; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .status { font-weight: 600; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tab {
+      padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-size: 14px;
+    }
+    .tab.active { background: var(--primary); color: var(--primary-contrast); border-color: var(--primary); }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer;
+    }
+    button.primary { background: var(--primary); color: var(--primary-contrast); border-color: var(--primary); }
+    button.ghost { background: transparent; }
+    button.warning { background: var(--warning); color: #111827; border-color: var(--warning); }
+    button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    button.success { background: var(--success); color: #fff; border-color: var(--success); }
+    .flex { display: flex; gap: 12px; align-items: center; }
+    .right { margin-left: auto; }
+    .kv { display: flex; flex-wrap: wrap; gap: 12px; }
+    .kv .item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+    .kv .item b { font-weight: 600; margin-right: 6px; }
+    .divider { height: 1px; background: var(--border); margin: 12px 0; }
+    .help { font-size: 12px; color: var(--muted); }
+    .nowrap { white-space: nowrap; }
+    .table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .table th, .table td { border: 1px solid var(--border); padding: 8px; text-align: left; }
+    .table thead th { background: var(--bg); }
+    .badge { padding: 4px 8px; border-radius: 999px; font-size: 12px; background: var(--bg); border: 1px solid var(--border); }
+    .hidden { display: none !important; }
+    .success-text { color: var(--success); }
+    .warning-text { color: var(--warning); }
+    .danger-text { color: var(--danger); }
+    .info-text { color: var(--info); }
+    .footer { color: var(--muted); font-size: 12px; text-align: center; padding: 20px; }
+    .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+    @media (max-width: 1000px) {
+      .two-col { grid-template-columns: 1fr; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="brand">Lending Portal</div>
+      <div class="role-select">
+        <label for="role" class="nowrap">Active role</label>
+        <select id="role">
+          <option value="applicant">Applicant</option>
+          <option value="underwriter">Underwriter</option>
+          <option value="risk">Risk Manager</option>
+          <option value="credit">Credit Committee</option>
+          <option value="ops">Operations</option>
+        </select>
+        <button id="toggleTheme" class="ghost">Toggle theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="two-col">
+      <!-- Left column -->
+      <section class="grid">
+        <div class="card">
+          <div class="section-title">
+            <h3>Application overview</h3>
+            <span class="pill"><span class="status" id="stateLabel">Intake</span> • <span id="appId">APP-2025-0001</span></span>
+          </div>
+          <div class="kv" id="summaryKV">
+            <div class="item"><b>Borrower:</b><span id="kvBorrower">—</span></div>
+            <div class="item"><b>Business:</b><span id="kvBusiness">—</span></div>
+            <div class="item"><b>Product:</b><span id="kvProduct">—</span></div>
+            <div class="item"><b>Requested:</b><span id="kvRequested">—</span></div>
+            <div class="item"><b>Tenor:</b><span id="kvTenor">—</span></div>
+            <div class="item"><b>Indicative rate:</b><span id="kvRate">—</span></div>
+            <div class="item"><b>Debt service coverage:</b><span id="kvDSCR">—</span></div>
+            <div class="item"><b>Collateral LTV:</b><span id="kvLTV">—</span></div>
+          </div>
+          <div class="divider"></div>
+          <div class="tabs" id="tabs">
+            <button class="tab active" data-tab="borrower">Borrower</button>
+            <button class="tab" data-tab="business">Business</button>
+            <button class="tab" data-tab="product">Product</button>
+            <button class="tab" data-tab="documents">Documents</button>
+            <button class="tab" data-tab="risk">Risk & underwriting</button>
+            <button class="tab" data-tab="approval">Approval</button>
+            <button class="tab" data-tab="ops">Disbursement</button>
+          </div>
+
+          <!-- Borrower -->
+          <div id="tab-borrower">
+            <div class="grid grid-2">
+              <div>
+                <label>Borrower type</label>
+                <select id="borrowerType">
+                  <option value="company">Company</option>
+                  <option value="partnership">Partnership</option>
+                  <option value="sole">Sole proprietor</option>
+                </select>
+              </div>
+              <div>
+                <label>Legal name</label>
+                <input id="legalName" placeholder="ABC Trading Limited" />
+              </div>
+              <div>
+                <label>Registration number</label>
+                <input id="regNo" placeholder="HK-XXXXXXX" />
+              </div>
+              <div>
+                <label>Incorporation date</label>
+                <input id="incDate" type="date" />
+              </div>
+              <div>
+                <label>Registered address</label>
+                <input id="address" placeholder="Unit, Building, Street, District" />
+              </div>
+              <div>
+                <label>Primary contact</label>
+                <input id="contact" placeholder="Name, Title" />
+              </div>
+              <div>
+                <label>Contact email</label>
+                <input id="email" type="email" placeholder="name@company.com" />
+              </div>
+              <div>
+                <label>Contact phone</label>
+                <input id="phone" placeholder="+852 XXXX XXXX" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Business -->
+          <div id="tab-business" class="hidden">
+            <div class="grid grid-3">
+              <div>
+                <label>Industry (NAICS/SIC)</label>
+                <input id="industry" placeholder="Wholesale of electronics (NAICS 423690)" />
+              </div>
+              <div>
+                <label>Years in operation</label>
+                <input id="yearsOp" type="number" min="0" placeholder="8" />
+              </div>
+              <div>
+                <label>Employees</label>
+                <input id="employees" type="number" min="0" placeholder="24" />
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div>
+                <label>Annual revenue (HKD)</label>
+                <input id="annualRevenue" type="number" min="0" step="1000" placeholder="12000000" />
+              </div>
+              <div>
+                <label>EBITDA margin (%)</label>
+                <input id="ebitdaMargin" type="number" min="0" max="100" step="0.1" placeholder="12.5" />
+              </div>
+              <div>
+                <label>Total debt outstanding (HKD)</label>
+                <input id="totalDebt" type="number" min="0" step="1000" placeholder="3000000" />
+              </div>
+              <div>
+                <label>Cash on hand (HKD)</label>
+                <input id="cash" type="number" min="0" step="1000" placeholder="800000" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Product -->
+          <div id="tab-product" class="hidden">
+            <div class="grid grid-3">
+              <div>
+                <label>Product type</label>
+                <select id="productType">
+                  <option value="term">Commercial term loan</option>
+                  <option value="mortgage">Commercial mortgage</option>
+                  <option value="overdraft">Overdraft</option>
+                  <option value="trade">Trade credit</option>
+                </select>
+              </div>
+              <div>
+                <label>Requested amount (HKD)</label>
+                <input id="reqAmount" type="number" min="0" step="1000" placeholder="2000000" />
+              </div>
+              <div>
+                <label>Tenor (months)</label>
+                <input id="tenor" type="number" min="1" max="360" placeholder="36" />
+              </div>
+            </div>
+
+            <!-- Facility-specific -->
+            <div id="facility-term" class="grid grid-2">
+              <div>
+                <label>Indicative annual rate (%)</label>
+                <input id="rateTerm" type="number" min="0" max="100" step="0.01" placeholder="8.5" />
+              </div>
+              <div>
+                <label>Repayment frequency</label>
+                <select id="freqTerm">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="facility-mortgage" class="grid grid-2 hidden">
+              <div>
+                <label>Property address</label>
+                <input id="propAddress" placeholder="Commercial Unit, Building, District" />
+              </div>
+              <div>
+                <label>Appraised value (HKD)</label>
+                <input id="appraisedValue" type="number" min="0" step="1000" placeholder="10000000" />
+              </div>
+              <div>
+                <label>Indicative annual rate (%)</label>
+                <input id="rateMortgage" type="number" min="0" max="100" step="0.01" placeholder="6.0" />
+              </div>
+              <div>
+                <label>Amortization (years)</label>
+                <input id="amortYears" type="number" min="1" max="30" placeholder="20" />
+              </div>
+            </div>
+
+            <div id="facility-overdraft" class="grid grid-2 hidden">
+              <div>
+                <label>Proposed limit (HKD)</label>
+                <input id="odLimit" type="number" min="0" step="1000" placeholder="1500000" />
+              </div>
+              <div>
+                <label>Commitment fee (%)</label>
+                <input id="odCommitFee" type="number" min="0" max="5" step="0.01" placeholder="0.50" />
+              </div>
+              <div>
+                <label>Spread over prime (%)</label>
+                <input id="odSpread" type="number" min="0" max="20" step="0.01" placeholder="2.75" />
+              </div>
+              <div>
+                <label>Security</label>
+                <input id="odSecurity" placeholder="Floating charge over receivables" />
+              </div>
+            </div>
+
+            <div id="facility-trade" class="grid grid-2 hidden">
+              <div>
+                <label>Trade line limit (HKD)</label>
+                <input id="tradeLimit" type="number" min="0" step="1000" placeholder="3000000" />
+              </div>
+              <div>
+                <label>Tenor per shipment (days)</label>
+                <input id="tradeTenorDays" type="number" min="0" max="180" placeholder="90" />
+              </div>
+              <div>
+                <label>LC/DP terms</label>
+                <input id="tradeTerms" placeholder="LC at sight, DP 60 days" />
+              </div>
+              <div>
+                <label>Collateral</label>
+                <input id="tradeCollateral" placeholder="Pledge over inventory & receivables" />
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="grid grid-3">
+              <div>
+                <label>Calculated monthly payment (term/mortgage)</label>
+                <input id="calcPayment" disabled />
+                <div class="help">Auto-calculates based on rate and tenor.</div>
+              </div>
+              <div>
+                <label>Estimated interest over tenor</label>
+                <input id="calcInterest" disabled />
+              </div>
+              <div>
+                <label>Indicative LTV (mortgage)</label>
+                <input id="calcLTV" disabled />
+              </div>
+            </div>
+          </div>
+
+          <!-- Documents -->
+          <div id="tab-documents" class="hidden">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Required</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="docTableBody"></tbody>
+            </table>
+            <div class="actions" style="margin-top:12px;">
+              <button id="markDocsComplete" class="success">Mark docs complete</button>
+              <button id="resetDocs" class="warning">Reset docs</button>
+            </div>
+          </div>
+
+          <!-- Risk & underwriting -->
+          <div id="tab-risk" class="hidden">
+            <div class="grid grid-3">
+              <div>
+                <label>DSCR target (x)</label>
+                <input id="dscrTarget" type="number" min="0" step="0.01" value="1.20" />
+              </div>
+              <div>
+                <label>DSCR actual (auto)</label>
+                <input id="dscrActual" disabled />
+                <div class="help">Based on EBITDA, existing debt service, and proposed payment.</div>
+              </div>
+              <div>
+                <label>Risk grade</label>
+                <select id="riskGrade">
+                  <option value="A">A (Low risk)</option>
+                  <option value="B">B (Moderate)</option>
+                  <option value="C">C (Elevated)</option>
+                  <option value="D">D (High)</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div>
+                <label>Key risk factors</label>
+                <textarea id="riskFactors" rows="4" placeholder="Industry cyclicality; customer concentration; collateral quality"></textarea>
+              </div>
+              <div>
+                <label>Mitigants</label>
+                <textarea id="riskMitigants" rows="4" placeholder="Additional collateral; covenants; guarantees"></textarea>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div>
+                <label>Covenants</label>
+                <textarea id="covenants" rows="3" placeholder="Minimum DSCR 1.25x; Max LTV 65%; Quarterly financial reporting"></textarea>
+              </div>
+              <div>
+                <label>Conditions precedent</label>
+                <textarea id="conditions" rows="3" placeholder="All KYC/AML cleared; Asset valuation; Insurance assigned"></textarea>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="actions">
+              <button id="submitUnderwrite" class="primary">Submit underwriting</button>
+              <button id="returnToApplicant" class="warning">Return for more info</button>
+            </div>
+          </div>
+
+          <!-- Approval -->
+          <div id="tab-approval" class="hidden">
+            <div class="grid grid-2">
+              <div>
+                <label>Decision</label>
+                <select id="approvalDecision">
+                  <option value="approve">Approve</option>
+                  <option value="conditional">Conditional approve</option>
+                  <option value="decline">Decline</option>
+                </select>
+              </div>
+              <div>
+                <label>Approved amount (HKD)</label>
+                <input id="approvedAmount" type="number" min="0" step="1000" placeholder="2000000" />
+              </div>
+              <div>
+                <label>Approved rate (%)</label>
+                <input id="approvedRate" type="number" min="0" max="100" step="0.01" placeholder="8.25" />
+              </div>
+              <div>
+                <label>Approval notes</label>
+                <input id="approvalNotes" placeholder="Any conditions or rationale" />
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="actions">
+              <button id="approve" class="success">Record approval</button>
+              <button id="decline" class="danger">Record decline</button>
+              <button id="requestChanges" class="warning">Request changes</button>
+            </div>
+            <div class="divider"></div>
+            <div class="grid">
+              <div class="kv">
+                <div class="item"><b>Committee outcome:</b><span id="kvOutcome">—</span></div>
+                <div class="item"><b>Approved terms:</b><span id="kvApprovedTerms">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disbursement -->
+          <div id="tab-ops" class="hidden">
+            <div class="grid grid-2">
+              <div>
+                <label>Drawdown date</label>
+                <input id="drawDate" type="date" />
+              </div>
+              <div>
+                <label>Account for disbursement</label>
+                <input id="disbAccount" placeholder="Bank / Branch / Account number" />
+              </div>
+              <div>
+                <label>Security perfection checklist</label>
+                <textarea id="securityChecklist" rows="3" placeholder="Charge registration; Insurance assignment; Directors' guarantees"></textarea>
+              </div>
+              <div>
+                <label>Post-approval conditions fulfilled</label>
+                <select id="postConditions">
+                  <option value="yes">Yes</option>
+                  <option value="partial">Partial</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="actions">
+              <button id="markDisbursed" class="primary">Mark as disbursed</button>
+              <button id="exportJSON" class="ghost">Export JSON</button>
+              <button id="importJSON" class="ghost">Import JSON</button>
+              <input id="importFile" type="file" accept="application/json" class="hidden" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Comments and audit trail -->
+        <div class="card">
+          <div class="section-title">
+            <h3>Comments & audit</h3>
+            <span class="muted">Role-scoped feed; immutable log</span>
+          </div>
+          <div id="commentFeed" style="max-height:220px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:10px; background: var(--bg);"></div>
+          <div class="flex" style="margin-top:10px;">
+            <input id="commentInput" placeholder="Add a comment with context…" />
+            <button id="addComment" class="primary">Post</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <aside class="grid">
+        <div class="card">
+          <div class="section-title">
+            <h3>Workflow status</h3>
+            <span class="badge" id="roleBadge">Applicant</span>
+          </div>
+          <ol style="margin:0 0 8px 18px;">
+            <li>Intake</li>
+            <li>Underwriting</li>
+            <li>Credit review</li>
+            <li>Approval</li>
+            <li>Disbursement</li>
+          </ol>
+          <div class="divider"></div>
+          <div class="actions">
+            <button id="advanceState" class="primary">Advance</button>
+            <button id="revertState" class="warning">Revert</button>
+            <button id="resetState" class="ghost">Reset</button>
+          </div>
+          <p class="help">Advances are constrained by role and completion of required steps.</p>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h3>Risk indicators</h3>
+            <span class="muted">Auto-calculated monitors</span>
+          </div>
+          <div class="kv">
+            <div class="item"><b>DSCR:</b><span id="monDSCR">—</span></div>
+            <div class="item"><b>LTV:</b><span id="monLTV">—</span></div>
+            <div class="item"><b>Limit utilization:</b><span id="monUtil">—</span></div>
+            <div class="item"><b>Covenant breaches:</b><span id="monBreaches">0</span></div>
+          </div>
+          <div class="divider"></div>
+          <div class="help">These are illustrative. Connect to real financials and collateral data in production.</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h3>Tasks</h3>
+            <span class="muted">Role-based checklist</span>
+          </div>
+          <ul id="taskList" style="margin:0; padding-left:18px;"></ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer">
+    © 2025 Lending Portal. This is a demo UI. Wire backend APIs for persistence, KYC/AML, scoring, and document storage.
+  </footer>
+
+  <script>
+    // Application state
+    const state = {
+      meta: {
+        id: "APP-2025-0001",
+        stage: "Intake",               // Intake → Underwriting → Credit Review → Approval → Disbursement
+        role: "applicant",             // applicant, underwriter, risk, credit, ops
+        docsComplete: false,
+        audit: []
+      },
+      borrower: {
+        type: "company", legalName: "", regNo: "", incDate: "", address: "",
+        contact: "", email: "", phone: ""
+      },
+      business: {
+        industry: "", yearsOp: 0, employees: 0,
+        annualRevenue: 0, ebitdaMargin: 0, totalDebt: 0, cash: 0
+      },
+      product: {
+        type: "term",
+        reqAmount: 0, tenor: 0,
+        rateTerm: 0, freqTerm: "monthly",
+        propAddress: "", appraisedValue: 0, rateMortgage: 0, amortYears: 0,
+        odLimit: 0, odCommitFee: 0, odSpread: 0, odSecurity: "",
+        tradeLimit: 0, tradeTenorDays: 0, tradeTerms: "", tradeCollateral: ""
+      },
+      underwriting: {
+        dscrTarget: 1.2, dscrActual: 0,
+        grade: "B",
+        riskFactors: "", riskMitigants: "",
+        covenants: "", conditions: ""
+      },
+      approval: {
+        decision: "approve",
+        amount: 0, rate: 0, notes: "",
+        outcome: "", terms: ""
+      },
+      ops: {
+        drawDate: "", disbAccount: "",
+        securityChecklist: "", postConditions: "no",
+        disbursed: false
+      },
+      docs: [
+        { name: "Certificate of incorporation", required: true, status: "Pending", notes: "" },
+        { name: "Business registration", required: true, status: "Pending", notes: "" },
+        { name: "Directors' IDs / KYC", required: true, status: "Pending", notes: "" },
+        { name: "Latest audited financials", required: true, status: "Pending", notes: "" },
+        { name: "Bank statements (6–12m)", required: true, status: "Pending", notes: "" },
+        { name: "Tax returns", required: false, status: "Optional", notes: "" },
+        { name: "Collateral valuation", required: false, status: "Optional", notes: "" },
+      ],
+      tasks: []
+    };
+
+    // Elements
+    const roleSel = document.getElementById('role');
+    const roleBadge = document.getElementById('roleBadge');
+    const stateLabel = document.getElementById('stateLabel');
+    const appIdLabel = document.getElementById('appId');
+
+    // Tabs
+    const tabs = document.querySelectorAll('.tab');
+    const tabPanels = {
+      borrower: document.getElementById('tab-borrower'),
+      business: document.getElementById('tab-business'),
+      product: document.getElementById('tab-product'),
+      documents: document.getElementById('tab-documents'),
+      risk: document.getElementById('tab-risk'),
+      approval: document.getElementById('tab-approval'),
+      ops: document.getElementById('tab-ops')
+    };
+
+    // Facility panels
+    const facilityPanels = {
+      term: document.getElementById('facility-term'),
+      mortgage: document.getElementById('facility-mortgage'),
+      overdraft: document.getElementById('facility-overdraft'),
+      trade: document.getElementById('facility-trade'),
+    };
+
+    // Summary KV elements
+    const kv = {
+      borrower: document.getElementById('kvBorrower'),
+      business: document.getElementById('kvBusiness'),
+      product: document.getElementById('kvProduct'),
+      requested: document.getElementById('kvRequested'),
+      tenor: document.getElementById('kvTenor'),
+      rate: document.getElementById('kvRate'),
+      dscr: document.getElementById('kvDSCR'),
+      ltv: document.getElementById('kvLTV'),
+      outcome: document.getElementById('kvOutcome'),
+      terms: document.getElementById('kvApprovedTerms'),
+      monDSCR: document.getElementById('monDSCR'),
+      monLTV: document.getElementById('monLTV'),
+      monUtil: document.getElementById('monUtil')
+    };
+
+    // Inputs
+    const inputs = {
+      borrowerType: document.getElementById('borrowerType'),
+      legalName: document.getElementById('legalName'),
+      regNo: document.getElementById('regNo'),
+      incDate: document.getElementById('incDate'),
+      address: document.getElementById('address'),
+      contact: document.getElementById('contact'),
+      email: document.getElementById('email'),
+      phone: document.getElementById('phone'),
+      industry: document.getElementById('industry'),
+      yearsOp: document.getElementById('yearsOp'),
+      employees: document.getElementById('employees'),
+      annualRevenue: document.getElementById('annualRevenue'),
+      ebitdaMargin: document.getElementById('ebitdaMargin'),
+      totalDebt: document.getElementById('totalDebt'),
+      cash: document.getElementById('cash'),
+      productType: document.getElementById('productType'),
+      reqAmount: document.getElementById('reqAmount'),
+      tenor: document.getElementById('tenor'),
+      rateTerm: document.getElementById('rateTerm'),
+      freqTerm: document.getElementById('freqTerm'),
+      propAddress: document.getElementById('propAddress'),
+      appraisedValue: document.getElementById('appraisedValue'),
+      rateMortgage: document.getElementById('rateMortgage'),
+      amortYears: document.getElementById('amortYears'),
+      odLimit: document.getElementById('odLimit'),
+      odCommitFee: document.getElementById('odCommitFee'),
+      odSpread: document.getElementById('odSpread'),
+      odSecurity: document.getElementById('odSecurity'),
+      tradeLimit: document.getElementById('tradeLimit'),
+      tradeTenorDays: document.getElementById('tradeTenorDays'),
+      tradeTerms: document.getElementById('tradeTerms'),
+      tradeCollateral: document.getElementById('tradeCollateral'),
+      calcPayment: document.getElementById('calcPayment'),
+      calcInterest: document.getElementById('calcInterest'),
+      calcLTV: document.getElementById('calcLTV'),
+      dscrTarget: document.getElementById('dscrTarget'),
+      dscrActual: document.getElementById('dscrActual'),
+      riskGrade: document.getElementById('riskGrade'),
+      riskFactors: document.getElementById('riskFactors'),
+      riskMitigants: document.getElementById('riskMitigants'),
+      covenants: document.getElementById('covenants'),
+      conditions: document.getElementById('conditions'),
+      approvalDecision: document.getElementById('approvalDecision'),
+      approvedAmount: document.getElementById('approvedAmount'),
+      approvedRate: document.getElementById('approvedRate'),
+      approvalNotes: document.getElementById('approvalNotes'),
+      drawDate: document.getElementById('drawDate'),
+      disbAccount: document.getElementById('disbAccount'),
+      securityChecklist: document.getElementById('securityChecklist'),
+      postConditions: document.getElementById('postConditions')
+    };
+
+    // Buttons
+    const buttons = {
+      toggleTheme: document.getElementById('toggleTheme'),
+      markDocsComplete: document.getElementById('markDocsComplete'),
+      resetDocs: document.getElementById('resetDocs'),
+      submitUnderwrite: document.getElementById('submitUnderwrite'),
+      returnToApplicant: document.getElementById('returnToApplicant'),
+      approve: document.getElementById('approve'),
+      decline: document.getElementById('decline'),
+      requestChanges: document.getElementById('requestChanges'),
+      advanceState: document.getElementById('advanceState'),
+      revertState: document.getElementById('revertState'),
+      resetState: document.getElementById('resetState'),
+      markDisbursed: document.getElementById('markDisbursed'),
+      exportJSON: document.getElementById('exportJSON'),
+      importJSON: document.getElementById('importJSON'),
+      importFile: document.getElementById('importFile'),
+      addComment: document.getElementById('addComment')
+    };
+    const commentFeed = document.getElementById('commentFeed');
+    const commentInput = document.getElementById('commentInput');
+
+    // Utils
+    const fmt = new Intl.NumberFormat('en-HK', { style: 'currency', currency: 'HKD', maximumFractionDigits: 0 });
+    const pct = (x) => (x || x === 0) ? `${Number(x).toFixed(2)}%` : "—";
+    const num = (x) => (x || x === 0) ? Number(x) : 0;
+    const nonEmpty = (s) => s && String(s).trim().length > 0;
+
+    function logAudit(action, details = {}) {
+      const entry = { ts: new Date().toISOString(), role: state.meta.role, stage: state.meta.stage, action, details };
+      state.meta.audit.push(entry);
+      const div = document.createElement('div');
+      div.className = 'help';
+      div.innerHTML = `<b>${action}</b> • ${entry.ts} • ${state.meta.role} @ ${state.meta.stage}<br/><span class="muted">${JSON.stringify(details)}</span>`;
+      commentFeed.prepend(div);
+    }
+
+    // Role-based task list
+    function refreshTasks() {
+      const tasks = [];
+      switch (state.meta.role) {
+        case 'applicant':
+          tasks.push('Complete borrower and business details', 'Select product and input facility terms', 'Upload required documents');
+          break;
+        case 'underwriter':
+          tasks.push('Validate financials and compute DSCR', 'Assess collateral and LTV', 'Draft covenants and conditions precedent');
+          break;
+        case 'risk':
+          tasks.push('Review risk grade and factors', 'Confirm mitigants and stress scenarios', 'Sign-off underwriting memo');
+          break;
+        case 'credit':
+          tasks.push('Deliberate and record decision', 'Set approved amount and rate', 'Document rationale and conditions');
+          break;
+        case 'ops':
+          tasks.push('Verify conditions precedent fulfilled', 'Prepare disbursement instructions', 'Perfect security and update registers');
+          break;
+      }
+      state.tasks = tasks;
+      const ul = document.getElementById('taskList');
+      ul.innerHTML = '';
+      tasks.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        ul.appendChild(li);
+      });
+    }
+
+    // Tabs behavior
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      Object.values(tabPanels).forEach(p => p.classList.add('hidden'));
+      const key = t.dataset.tab;
+      tabPanels[key].classList.remove('hidden');
+    }));
+
+    // Theme toggle
+    buttons.toggleTheme.addEventListener('click', () => {
+      const root = document.documentElement;
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+    });
+
+    // Role handling
+    roleSel.addEventListener('change', (e) => {
+      state.meta.role = e.target.value;
+      roleBadge.textContent = roleSel.options[roleSel.selectedIndex].text;
+      logAudit('Role switched', { role: state.meta.role });
+      refreshTasks();
+      enforceRolePermissions();
+    });
+
+    function enforceRolePermissions() {
+      const role = state.meta.role;
+      // Disable/enable sections by role
+      const editable = {
+        borrower: role === 'applicant',
+        business: role === 'applicant',
+        product: role === 'applicant' || role === 'underwriter',
+        documents: role === 'applicant',
+        risk: role === 'underwriter' || role === 'risk',
+        approval: role === 'credit',
+        ops: role === 'ops'
+      };
+      for (const [key, panel] of Object.entries(tabPanels)) {
+        const inputs = panel.querySelectorAll('input, select, textarea, button');
+        inputs.forEach(el => {
+          if (el.tagName === 'BUTTON') {
+            // allow workflow buttons per role logic below
+            return;
+          }
+          el.disabled = !editable[key];
+        });
+      }
+      // Special button guards
+      buttons.submitUnderwrite.disabled = !(role === 'underwriter' || role === 'risk');
+      buttons.returnToApplicant.disabled = !(role === 'underwriter' || role === 'risk');
+      buttons.approve.disabled = role !== 'credit';
+      buttons.decline.disabled = role !== 'credit';
+      buttons.requestChanges.disabled = role !== 'credit';
+      buttons.markDisbursed.disabled = role !== 'ops';
+      buttons.advanceState.disabled = false;
+      buttons.revertState.disabled = false;
+      buttons.resetState.disabled = false;
+    }
+
+    // Facility panel switching
+    inputs.productType.addEventListener('change', () => {
+      state.product.type = inputs.productType.value;
+      for (const key of Object.keys(facilityPanels)) {
+        facilityPanels[key].classList.toggle('hidden', key !== state.product.type);
+      }
+      computeProductCalcs();
+      refreshSummary();
+      logAudit('Product type set', { productType: state.product.type });
+    });
+
+    // Bind borrower/business/product inputs to state
+    Object.entries(inputs).forEach(([k, el]) => {
+      if (['calcPayment','calcInterest','calcLTV','dscrActual'].includes(k)) return;
+      el.addEventListener('input', () => {
+        // map to state
+        if (k in state.borrower) state.borrower[k.replace(/^\w/, c => c.toLowerCase())] = el.value;
+        else if (k in state.business) state.business[k] = num(el.value);
+        else if (k in state.product) state.product[k] = (el.type === 'number') ? num(el.value) : el.value;
+        else if (k in state.underwriting) {
+          if (k === 'dscrTarget') state.underwriting.dscrTarget = Number(el.value);
+          else if (k === 'riskGrade') state.underwriting.grade = el.value;
+          else state.underwriting[k.replace('risk','risk').toLowerCase()] = el.value;
+        } else if (k in state.approval) {
+          if (k === 'approvalDecision') state.approval.decision = el.value;
+          else if (k === 'approvedAmount') state.approval.amount = num(el.value);
+          else if (k === 'approvedRate') state.approval.rate = Number(el.value);
+          else if (k === 'approvalNotes') state.approval.notes = el.value;
+        } else if (k in state.ops) {
+          if (k === 'postConditions') state.ops.postConditions = el.value;
+          else state.ops[k] = el.value;
+        }
+        computeProductCalcs();
+        computeRiskCalcs();
+        refreshSummary();
+      });
+    });
+
+    // Product calculations
+    function computeProductCalcs() {
+      const p = state.product;
+      const amount = p.reqAmount || p.odLimit || p.tradeLimit || 0;
+      // Payment calculation for annuity loans (monthly)
+      const rateAnnual = (p.type === 'mortgage') ? p.rateMortgage : p.rateTerm;
+      const nMonths = (p.type === 'mortgage') ? (p.amortYears || 0) * 12 : p.tenor || 0;
+      const rMonthly = rateAnnual ? (rateAnnual / 100) / 12 : 0;
+      let payment = 0, totalInterest = 0;
+      if (rMonthly > 0 && nMonths > 0 && amount > 0) {
+        const factor = Math.pow(1 + rMonthly, nMonths);
+        payment = amount * rMonthly * factor / (factor - 1);
+        totalInterest = payment * nMonths - amount;
+      }
+      inputs.calcPayment.value = payment ? fmt.format(Math.round(payment)) : "—";
+      inputs.calcInterest.value = totalInterest ? fmt.format(Math.round(totalInterest)) : "—";
+
+      // LTV for mortgage
+      const ltv = (p.type === 'mortgage' && p.appraisedValue > 0) ? (p.reqAmount / p.appraisedValue) * 100 : 0;
+      inputs.calcLTV.value = ltv ? `${ltv.toFixed(2)}%` : "—";
+      kv.ltv.textContent = ltv ? `${ltv.toFixed(1)}%` : "—";
+
+      // Utilization (illustrative)
+      kv.monUtil.textContent = amount ? `${Math.min(100, ((amount / Math.max(amount, 1)) * 100)).toFixed(0)}%` : "—";
+    }
+
+    // Risk calculations
+    function computeRiskCalcs() {
+      const b = state.business, p = state.product;
+      const ebitda = b.annualRevenue * (b.ebitdaMargin / 100);
+      const existingDebtService = b.totalDebt ? (b.totalDebt * 0.08) : 0; // simple proxy
+      const proposedPayment = parseCurrency(inputs.calcPayment.value);
+
+      const dscr = (ebitda) ? (ebitda / (existingDebtService + proposedPayment)) : 0;
+      state.underwriting.dscrActual = dscr || 0;
+      inputs.dscrActual.value = dscr ? dscr.toFixed(2) : "—";
+      kv.dscr.textContent = dscr ? `${dscr.toFixed(2)}x` : "—";
+      kv.monDSCR.textContent = dscr ? `${dscr.toFixed(2)}x` : "—";
+
+      // Rate in summary
+      const rateAnnual = (p.type === 'mortgage') ? p.rateMortgage : p.rateTerm;
+      kv.rate.textContent = rateAnnual ? `${rateAnnual.toFixed(2)}%` : "—";
+    }
+
+    function parseCurrency(s) {
+      if (!s || s === "—") return 0;
+      return Number(String(s).replace(/[^\d.-]/g, ''));
+    }
+
+    // Summary
+    function refreshSummary() {
+      appIdLabel.textContent = state.meta.id;
+      stateLabel.textContent = state.meta.stage;
+
+      const b = state.borrower;
+      const biz = state.business;
+      const p = state.product;
+
+      kv.borrower.textContent = nonEmpty(b.legalName) ? `${b.legalName} (${b.type})` : "—";
+      kv.business.textContent = nonEmpty(biz.industry) ? `${biz.industry}, ${biz.yearsOp}y` : "—";
+      kv.product.textContent = p.type ? p.type : "—";
+      kv.requested.textContent = (p.reqAmount || p.odLimit || p.tradeLimit) ? fmt.format(p.reqAmount || p.odLimit || p.tradeLimit) : "—";
+      kv.tenor.textContent = (p.type === 'mortgage') ? `${p.amortYears || 0}y` : (p.tenor ? `${p.tenor}m` : "—");
+    }
+
+    // Documents table
+    function renderDocs() {
+      const tbody = document.getElementById('docTableBody');
+      tbody.innerHTML = '';
+      state.docs.forEach((doc, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${doc.name}</td>
+          <td>${doc.required ? 'Yes' : 'No'}</td>
+          <td><span class="badge">${doc.status}</span></td>
+          <td><input data-idx="${idx}" class="doc-note" placeholder="Notes…" value="${doc.notes}"/></td>
+          <td>
+            <button class="ghost" data-idx="${idx}" data-action="upload">Upload</button>
+            <button class="ghost" data-idx="${idx}" data-action="verify">Verify</button>
+            <button class="ghost danger" data-idx="${idx}" data-action="reject">Reject</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('.doc-note').forEach(el => {
+        el.addEventListener('input', (e) => {
+          const idx = Number(e.target.dataset.idx);
+          state.docs[idx].notes = e.target.value;
+        });
+      });
+      tbody.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = Number(btn.dataset.idx);
+          const action = btn.dataset.action;
+          if (action === 'upload') state.docs[idx].status = 'Uploaded';
+          if (action === 'verify') state.docs[idx].status = 'Verified';
+          if (action === 'reject') state.docs[idx].status = 'Rejected';
+          renderDocs();
+          checkDocsComplete();
+          logAudit('Document ' + action, { doc: state.docs[idx].name, status: state.docs[idx].status });
+        });
+      });
+    }
+
+    function checkDocsComplete() {
+      const req = state.docs.filter(d => d.required);
+      state.meta.docsComplete = req.length > 0 && req.every(d => d.status === 'Verified');
+    }
+
+    buttons.markDocsComplete.addEventListener('click', () => {
+      state.docs.forEach(d => d.status = d.required ? 'Verified' : 'Optional');
+      renderDocs();
+      checkDocsComplete();
+      logAudit('Documents marked complete');
+    });
+
+    buttons.resetDocs.addEventListener('click', () => {
+      state.docs.forEach(d => d.status = d.required ? 'Pending' : 'Optional');
+      renderDocs();
+      state.meta.docsComplete = false;
+      logAudit('Documents reset');
+    });
+
+    // Underwriting actions
+    buttons.submitUnderwrite.addEventListener('click', () => {
+      if (state.meta.stage !== 'Underwriting' && state.meta.stage !== 'Credit Review') {
+        alert('Move to Underwriting or Credit Review stage first.');
+        return;
+      }
+      logAudit('Underwriting submitted', {
+        dscrActual: state.underwriting.dscrActual,
+        dscrTarget: state.underwriting.dscrTarget,
+        grade: state.underwriting.grade
+      });
+      alert('Underwriting memo recorded.');
+    });
+
+    buttons.returnToApplicant.addEventListener('click', () => {
+      state.meta.stage = 'Intake';
+      refreshWorkflowUI();
+      logAudit('Returned to applicant', { reason: 'More info required' });
+    });
+
+    // Approval actions
+    buttons.approve.addEventListener('click', () => {
+      state.approval.outcome = 'Approved';
+      state.approval.terms = `HKD ${state.approval.amount.toLocaleString()} at ${state.approval.rate.toFixed(2)}% • ${state.approval.notes || ''}`;
+      state.meta.stage = 'Approval';
+      refreshWorkflowUI();
+      refreshSummary();
+      logAudit('Committee approval recorded', { terms: state.approval.terms });
+    });
+
+    buttons.decline.addEventListener('click', () => {
+      state.approval.outcome = 'Declined';
+      state.approval.terms = `Declined • ${state.approval.notes || ''}`;
+      state.meta.stage = 'Approval';
+      refreshWorkflowUI();
+      refreshSummary();
+      logAudit('Committee decline recorded', { notes: state.approval.notes });
+    });
+
+    buttons.requestChanges.addEventListener('click', () => {
+      state.meta.stage = 'Credit Review';
+      refreshWorkflowUI();
+      logAudit('Committee requested changes', { notes: state.approval.notes });
+    });
+
+    // Ops actions
+    buttons.markDisbursed.addEventListener('click', () => {
+      if (state.ops.postConditions !== 'yes') {
+        alert('Post-approval conditions not fully met.');
+        return;
+      }
+      state.ops.disbursed = true;
+      state.meta.stage = 'Disbursement';
+      refreshWorkflowUI();
+      logAudit('Disbursed', { date: state.ops.drawDate, account: state.ops.disbAccount });
+    });
+
+    // Workflow navigation
+    const STAGES = ['Intake','Underwriting','Credit Review','Approval','Disbursement'];
+
+    buttons.advanceState.addEventListener('click', () => {
+      const i = STAGES.indexOf(state.meta.stage);
+      const next = STAGES[Math.min(i + 1, STAGES.length - 1)];
+      if (!canAdvance(next)) {
+        alert('Prerequisites not met for: ' + next);
+        return;
+      }
+      state.meta.stage = next;
+      refreshWorkflowUI();
+      logAudit('Stage advanced', { to: next });
+    });
+
+    buttons.revertState.addEventListener('click', () => {
+      const i = STAGES.indexOf(state.meta.stage);
+      const prev = STAGES[Math.max(i - 1, 0)];
+      state.meta.stage = prev;
+      refreshWorkflowUI();
+      logAudit('Stage reverted', { to: prev });
+    });
+
+    buttons.resetState.addEventListener('click', () => {
+      state.meta.stage = 'Intake';
+      refreshWorkflowUI();
+      logAudit('Stage reset');
+    });
+
+    function canAdvance(next) {
+      const role = state.meta.role;
+      if (next === 'Underwriting') return state.meta.docsComplete && role !== 'credit' && role !== 'ops';
+      if (next === 'Credit Review') return role === 'underwriter' || role === 'risk';
+      if (next === 'Approval') return role === 'credit';
+      if (next === 'Disbursement') return role === 'ops' && state.approval.outcome === 'Approved';
+      return true;
+    }
+
+    function refreshWorkflowUI() {
+      stateLabel.textContent = state.meta.stage;
+      document.querySelectorAll('ol li').forEach((li, idx) => {
+        li.style.fontWeight = STAGES[idx] === state.meta.stage ? '700' : '400';
+        li.style.color = STAGES[idx] === state.meta.stage ? 'var(--primary)' : 'inherit';
+      });
+      kv.outcome.textContent = state.approval.outcome || '—';
+      kv.terms.textContent = state.approval.terms || '—';
+      enforceRolePermissions();
+    }
+
+    // Comments
+    buttons.addComment.addEventListener('click', () => {
+      const text = commentInput.value.trim();
+      if (!text) return;
+      logAudit('Comment', { text });
+      commentInput.value = '';
+    });
+
+    // Export/Import
+    buttons.exportJSON.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${state.meta.id}.json`;
+      a.click();
+      logAudit('Exported JSON');
+    });
+
+    buttons.importJSON.addEventListener('click', () => {
+      buttons.importFile.click();
+    });
+
+    buttons.importFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          Object.assign(state, data);
+          hydrateUIFromState();
+          logAudit('Imported JSON', { id: state.meta.id });
+        } catch (err) {
+          alert('Invalid JSON.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Hydration
+    function hydrateUIFromState() {
+      roleSel.value = state.meta.role;
+      roleBadge.textContent = roleSel.options[roleSel.selectedIndex].text;
+      stateLabel.textContent = state.meta.stage;
+      appIdLabel.textContent = state.meta.id;
+
+      // Borrower
+      inputs.borrowerType.value = state.borrower.type;
+      inputs.legalName.value = state.borrower.legalName;
+      inputs.regNo.value = state.borrower.regNo;
+      inputs.incDate.value = state.borrower.incDate;
+      inputs.address.value = state.borrower.address;
+      inputs.contact.value = state.borrower.contact;
+      inputs.email.value = state.borrower.email;
+      inputs.phone.value = state.borrower.phone;
+
+      // Business
+      inputs.industry.value = state.business.industry;
+      inputs.yearsOp.value = state.business.yearsOp || 0;
+      inputs.employees.value = state.business.employees || 0;
+      inputs.annualRevenue.value = state.business.annualRevenue || 0;
+      inputs.ebitdaMargin.value = state.business.ebitdaMargin || 0;
+      inputs.totalDebt.value = state.business.totalDebt || 0;
+      inputs.cash.value = state.business.cash || 0;
+
+      // Product
+      inputs.productType.value = state.product.type;
+      inputs.reqAmount.value = state.product.reqAmount || 0;
+      inputs.tenor.value = state.product.tenor || 0;
+      inputs.rateTerm.value = state.product.rateTerm || 0;
+      inputs.freqTerm.value = state.product.freqTerm || 'monthly';
+      inputs.propAddress.value = state.product.propAddress || '';
+      inputs.appraisedValue.value = state.product.appraisedValue || 0;
+      inputs.rateMortgage.value = state.product.rateMortgage || 0;
+      inputs.amortYears.value = state.product.amortYears || 0;
+      inputs.odLimit.value = state.product.odLimit || 0;
+      inputs.odCommitFee.value = state.product.odCommitFee || 0;
+      inputs.odSpread.value = state.product.odSpread || 0;
+      inputs.odSecurity.value = state.product.odSecurity || '';
+      inputs.tradeLimit.value = state.product.tradeLimit || 0;
+      inputs.tradeTenorDays.value = state.product.tradeTenorDays || 0;
+      inputs.tradeTerms.value = state.product.tradeTerms || '';
+      inputs.tradeCollateral.value = state.product.tradeCollateral || '';
+
+      // Underwriting
+      inputs.dscrTarget.value = state.underwriting.dscrTarget || 1.2;
+      inputs.riskGrade.value = state.underwriting.grade || 'B';
+      inputs.riskFactors.value = state.underwriting.riskFactors || '';
+      inputs.riskMitigants.value = state.underwriting.riskMitigants || '';
+      inputs.covenants.value = state.underwriting.covenants || '';
+      inputs.conditions.value = state.underwriting.conditions || '';
+
+      // Approval
+      inputs.approvalDecision.value = state.approval.decision || 'approve';
+      inputs.approvedAmount.value = state.approval.amount || 0;
+      inputs.approvedRate.value = state.approval.rate || 0;
+      inputs.approvalNotes.value = state.approval.notes || '';
+
+      // Ops
+      inputs.drawDate.value = state.ops.drawDate || '';
+      inputs.disbAccount.value = state.ops.disbAccount || '';
+      inputs.securityChecklist.value = state.ops.securityChecklist || '';
+      inputs.postConditions.value = state.ops.postConditions || 'no';
+
+      // Panels visibility
+      for (const key of Object.keys(facilityPanels)) {
+        facilityPanels[key].classList.toggle('hidden', key !== state.product.type);
+      }
+
+      renderDocs();
+      refreshTasks();
+      computeProductCalcs();
+      computeRiskCalcs();
+      refreshSummary();
+      refreshWorkflowUI();
+      enforceRolePermissions();
+    }
+
+    // Initialize
+    renderDocs();
+    refreshTasks();
+    hydrateUIFromState();
+  </script>
+</body>
+</html>
